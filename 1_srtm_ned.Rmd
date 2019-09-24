@@ -3,6 +3,8 @@ title: "Topographic Change caused by People"
 author: "Matthew Ross"
 date: "9/23/2019"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 
@@ -14,6 +16,8 @@ library(sf)  #Spatial datasets
 library(mapview) #interactive mapping
 library(raster) #Raster analysis
 library(elevatr) #National Elevation Dataset downloader. 
+library(ggthemes) #for plotting
+library(ggplot2) #for plotting
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -41,7 +45,7 @@ download.file(url='https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/topo/dow
 unzip('data/topo_change.zip',exdir='data/topo_change')
 
 #Check that the unzipping worked
-#list.files('data/topo_change')
+list.files('data/topo_change')
 
 ```
 
@@ -87,10 +91,10 @@ mapview(az_mine)
 az_raster_before <- get_elev_raster(az_mine,z=12)
 
 #Look at the structure of the data
-#str(az_raster)
+#str(az_raster_before)
 
 #Summary of the data
-#summary(az_raster)
+#summary(az_raster_before)
 
 plot(az_raster_before)
 
@@ -171,8 +175,16 @@ plot(dem_diff)
 You may want to check out the command maxValue and minValue
 
 ```{r}
-
 #YOUR CODE HERE
+
+#Minimum value caused by mining
+minValue(dem_diff)
+
+#Maximum value caused by mining
+maxValue(dem_diff)
+
+#Positive elevation change is within the map area, but not at the mining site. Positive elevation change from the maxValue() function could still be reflecting mining activity, such as piles of unused material. 
+
 ```
 
 
@@ -180,7 +192,7 @@ You may want to check out the command maxValue and minValue
 
 The national elevation dataset (NED) and the Shuttle 
 Radar Topography Mission are extremely different ways to
-estimate elevatino. NED is derived from thousands of 
+estimate elevatin. NED is derived from thousands of 
 compiled elevation datasets that can be collected on the
 ground, from LiDAR or other ways, while SRTM is collected
 with radar from space. As a result, we naturally expect
@@ -194,7 +206,11 @@ elevation change?
 ```{r}
 
 #Your code here
+#Creating a 5 km buffer. Remember: az_mine units is in meters
+az_buff <- st_buffer(az_mine, dist = 5000)
 
+#mapview to check if buffer worked
+mapview(az_mine) + mapview(az_buff)
 
 ```
 
@@ -206,6 +222,12 @@ same projection as the dem_diff raster dataset
 hint: you may want to explore st_crs to help you here
 
 ```{r}
+#project az_buff to dem_diff projection
+az_buff_p <- st_transform(az_buff, crs = st_crs(dem_diff))
+
+#check the projection to make sure it works
+#st_crs(dem_diff)
+#st_crs(az_buff_p)
 
 ```
 
@@ -218,12 +240,32 @@ the inverse option does
 
 ```{r}
 #Your code here
+
+#mask NED topography
+az_NED_mask <- mask(az_raster_before_trim, az_buff_p, inverse = TRUE)
+#mapview(az_NED_mask) # just to check
+
+#mask STRM topography
+az_STRM_mask <- mask(az_raster_after_clip, az_buff_p, inverse = TRUE)
+#mapview(az_STRM_mask) # just to check
 ```
 
 
 ### 2d) Use the summary command to look at the summary of
 differences between these two DEMs in areas where there has
 been no mining
+
+```{r}
+#find the difference between the two topographies
+az_mask_diff <- az_NED_mask - az_STRM_mask
+
+#summarize differences
+summary(az_mask_diff)
+
+#view differences just to see
+#mapview(az_mask_diff)
+#plot(az_mask_diff)
+```
 
 
 ## 3) What does the shape of the "error" distribution look like
@@ -239,6 +281,11 @@ make a plot of the two dems.
 USGS az_mine dataset
 
 ```{r}
+#mask the dem by the mine outline + transform mine to dem_diff crs
+dem_diff_mine <- mask(dem_diff, 
+                      st_transform(az_mine, st_crs(dem_diff)))
+
+#plot(dem_diff_mine)
 
 ```
 
@@ -248,9 +295,18 @@ values from both the unmined and mined regions of your rasters.
 Label these vectors as `unmined_dem` and `mined_dem`. 
 
 ```{r}
+#get the unmined area of dem_diff
+dem_diff_unmine <- mask(dem_diff, 
+                        st_transform(az_mine, st_crs(dem_diff)), 
+                        inverse = TRUE)
+#plot(dem_diff_unmine)
 
+#create two vectors of mined and unmined dem values
+mined_dem <- getValues(dem_diff_mine)
+unmined_dem <- getValues(dem_diff_unmine)
 
-
+#summary(mined_dem) # lots of NAs
+#summary(unmined_dem) # not as many NAs
 ```
 
 
@@ -265,6 +321,17 @@ mined_type <- rep('mined',length(mined_dem))
 mined_table <- tibble(dem_values = c(unmined_dem,mined_dem),
                       type = c(unmined_type,mined_type)) 
                       
+
+# plot the density plots
+ggplot(data = mined_table, aes(x = dem_values, colour = type)) + 
+  geom_density(size = 1) + 
+  ylab('Density') + 
+  xlab('Difference DEM Values (m)') + 
+  theme_few() + 
+  scale_color_few()+
+  theme(legend.position=c(0.1,0.85))
+
+#DEM differences in the unmined area are centered around zero. Differences in the mined area are centered around approx. -40 m
                     
 ```
 
