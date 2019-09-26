@@ -264,7 +264,7 @@ summary(az_mask_diff)
 
 #view differences just to see
 #mapview(az_mask_diff)
-#plot(az_mask_diff)
+plot(az_mask_diff)
 ```
 
 
