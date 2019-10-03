@@ -1,6 +1,6 @@
 ---
 title: "Topographic Change caused by People"
-author: "Matthew Ross"
+author: "Juli Scamardo"
 date: "9/23/2019"
 output: html_document
 editor_options: 
@@ -172,7 +172,7 @@ plot(dem_diff)
 
 ## 1) What is the maximum/minimum elevation change caused by mining?
 
-You may want to check out the command maxValue and minValue
+Positive elevation change is within the map area, but not at the mining site. Positive elevation change from the maxValue() function could still be reflecting mining activity, such as piles of unused material.
 
 ```{r}
 #YOUR CODE HERE
@@ -182,8 +182,6 @@ minValue(dem_diff)
 
 #Maximum value caused by mining
 maxValue(dem_diff)
-
-#Positive elevation change is within the map area, but not at the mining site. Positive elevation change from the maxValue() function could still be reflecting mining activity, such as piles of unused material. 
 
 ```
 
@@ -215,11 +213,8 @@ mapview(az_mine) + mapview(az_buff)
 ```
 
 
-### 2b) Use the the st_transform command to transform the 
-projection of your buffered az_mine dataset to the 
-same projection as the dem_diff raster dataset
+### 2b) Use the the st_transform command to transform the projection of your buffered az_mine dataset to the same projection as the dem_diff raster dataset
 
-hint: you may want to explore st_crs to help you here
 
 ```{r}
 #project az_buff to dem_diff projection
@@ -232,11 +227,7 @@ az_buff_p <- st_transform(az_buff, crs = st_crs(dem_diff))
 ```
 
 
-### 2c) Use the raster::mask command to mask out all the 
-areas inside of the buffered and reprojected az_mine dataset.
-
-hint: look at the mask command and try to understand what
-the inverse option does
+### 2c) Use the raster::mask command to mask out all the areas inside of the buffered and reprojected az_mine dataset.
 
 ```{r}
 #Your code here
@@ -251,9 +242,7 @@ az_STRM_mask <- mask(az_raster_after_clip, az_buff_p, inverse = TRUE)
 ```
 
 
-### 2d) Use the summary command to look at the summary of
-differences between these two DEMs in areas where there has
-been no mining
+### 2d) Use the summary command to look at the summary of differences between these two DEMs in areas where there has been no mining
 
 ```{r}
 #find the difference between the two topographies
@@ -268,31 +257,19 @@ plot(az_mask_diff)
 ```
 
 
-## 3) What does the shape of the "error" distribution look like
-in areas that have not been mined versus areas that have
-been mined? 
+## 3) What does the shape of the "error" distribution look like in areas that have not been mined versus areas that have been mined? 
 
-To look at distributional changes, we may want to convert this
-raster dataset back into a data.frame or tibble type shape so 
-that we can take advantage of ggplots plotting capabilities and 
-make a plot of the two dems.
-
-### 3a) Mask the raster dem_diff dataset to the exact outlines of the
-USGS az_mine dataset
+### 3a) Mask the raster dem_diff dataset to the exact outlines of the USGS az_mine dataset
 
 ```{r}
 #mask the dem by the mine outline + transform mine to dem_diff crs
 dem_diff_mine <- mask(dem_diff, 
                       st_transform(az_mine, st_crs(dem_diff)))
 
-#plot(dem_diff_mine)
-
 ```
 
 
-### 3b) Use the getValues command to extract the elevation
-values from both the unmined and mined regions of your rasters. 
-Label these vectors as `unmined_dem` and `mined_dem`. 
+### 3b) Use the getValues command to extract the elevation values from both the unmined and mined regions of your rasters.Label these vectors as `unmined_dem` and `mined_dem`. 
 
 ```{r}
 #get the unmined area of dem_diff
@@ -310,8 +287,9 @@ unmined_dem <- getValues(dem_diff_unmine)
 ```
 
 
-### 3c) Use ggplot and the command geom_density() to look at
-the differences in mined and unmined regions of Arizona.
+### 3c) Use ggplot and the command geom_density() to look at the differences in mined and unmined regions of Arizona.
+
+DEM differences in the unmined area are centered around zero. Differences in the mined area are centered around approx. -40 m
 
 ```{r}
 # Here I'm just making the table for you
@@ -330,8 +308,6 @@ ggplot(data = mined_table, aes(x = dem_values, colour = type)) +
   theme_few() + 
   scale_color_few()+
   theme(legend.position=c(0.1,0.85))
-
-#DEM differences in the unmined area are centered around zero. Differences in the mined area are centered around approx. -40 m
                     
 ```
 

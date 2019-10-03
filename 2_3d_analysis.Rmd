@@ -1,6 +1,6 @@
 ---
 title: "Terrain analyses and rayshader for 3d plots"
-author: "Matthew Ross"
+author: "Juli Scamardo"
 date: "9/25/2019"
 output: html_document
 ---
@@ -97,6 +97,7 @@ az_matrix %>%
   add_shadow(ray_shade(az_matrix,zscale=2),0.5) %>%
   add_shadow(ambient_shade(az_matrix)) %>%
   plot_3d(az_matrix,zscale=10,fov = 0,theta=135,zoom=0.75)
+render_snapshot(clear = TRUE)
 ```
 
 
@@ -176,6 +177,8 @@ pre_matrix %>%
   add_shadow(ray_shade(pre_matrix,zscale=2),0.5) %>%
   add_shadow(ambient_shade(pre_matrix)) %>%
   plot_3d(pre_matrix,zscale=10,fov = 0,theta=135,zoom=0.75)
+render_snapshot(clear = TRUE)
+
 ```
 
 
@@ -194,5 +197,6 @@ post_matrix %>%
   add_shadow(ray_shade(post_matrix,zscale=2),0.5) %>%
   add_shadow(ambient_shade(post_matrix)) %>%
   plot_3d(post_matrix,zscale=10,fov = 0,theta=135,zoom=0.75)
+render_snapshot(clear = TRUE)
 ```
 
